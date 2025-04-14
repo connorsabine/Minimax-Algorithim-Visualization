@@ -1,7 +1,7 @@
 import pygame
 import math
 
-WIDTH, HEIGHT = 1400, 600  
+WIDTH, HEIGHT = 1200, 600  
 GAME_WIDTH = 600
 GRID_SIZE = 3
 CELL_SIZE = GAME_WIDTH // GRID_SIZE
@@ -160,6 +160,9 @@ while running:
                     screen.blit(text, (GAME_WIDTH // 2 - 80, 0))
                 else:
                     player_turn = False
+                    
+            draw_marks()
+            pygame.display.update()
 
 
         # AI TURN
@@ -195,7 +198,9 @@ while running:
                 small_font = pygame.font.Font(None, 40)
                 move_text = small_font.render(f"Score: {eval}", True, (0, 0, 0))
                 screen.blit(move_text, (mini_board_x, mini_board_y + 135))  
+                
                 pygame.display.update()
+                pygame.time.delay(300) 
 
             if best_move:
                 ai_row, ai_col = best_move

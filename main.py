@@ -1,36 +1,85 @@
-import tkinter as tk
-from tkinter import messagebox
+import pygame
 import math
 
+WIDTH, HEIGHT = 1400, 600  
+GAME_WIDTH = 600
+GRID_SIZE = 3
+CELL_SIZE = GAME_WIDTH // GRID_SIZE
+LINE_WIDTH = 5
+CIRCLE_RADIUS = CELL_SIZE // 3
+CIRCLE_WIDTH = 15
+CROSS_WIDTH = 15
+OFFSET = 50
 
-def print_board(board):
-    for row in board:
-        print("|".join(row))
-        print("-" * 5)
+BG_COLOR = (28, 170, 156)
+LINE_COLOR = (23, 145, 135)
+CIRCLE_COLOR = (239, 231, 200)
+CROSS_COLOR = (84, 84, 84)
+BLANK_COLOR = (200, 200, 200) 
+
+pygame.init()
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Tic Tac Toe")
+screen.fill(BG_COLOR)
+
+pygame.draw.rect(screen, BLANK_COLOR, (GAME_WIDTH, 0, WIDTH, WIDTH))
+font = pygame.font.Font(None, 60)
+
+board = [[' ' for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]
+game_over = False
+
+
+def draw_grid():
+    for i in range(1, GRID_SIZE):
+        pygame.draw.line(screen, LINE_COLOR, (0, i * CELL_SIZE), (GAME_WIDTH, i * CELL_SIZE), LINE_WIDTH)
+        pygame.draw.line(screen, LINE_COLOR, (i * CELL_SIZE, 0), (i * CELL_SIZE, HEIGHT), LINE_WIDTH)
+
+
+def draw_marks():
+    for row in range(GRID_SIZE):
+        for col in range(GRID_SIZE):
+            if board[row][col] == 'X':
+                draw_cross(row, col)
+            elif board[row][col] == 'O':
+                draw_circle(row, col)
+
+
+def draw_circle(row, col):
+    center = (col * CELL_SIZE + CELL_SIZE // 2, row * CELL_SIZE + CELL_SIZE // 2)
+    pygame.draw.circle(screen, CIRCLE_COLOR, center, CIRCLE_RADIUS, CIRCLE_WIDTH)
+
+
+def draw_cross(row, col):
+    start1 = (col * CELL_SIZE + OFFSET, row * CELL_SIZE + OFFSET)
+    end1 = (col * CELL_SIZE + CELL_SIZE - OFFSET, row * CELL_SIZE + CELL_SIZE - OFFSET)
+    start2 = (col * CELL_SIZE + OFFSET, row * CELL_SIZE + CELL_SIZE - OFFSET)
+    end2 = (col * CELL_SIZE + CELL_SIZE - OFFSET, row * CELL_SIZE + OFFSET)
+    pygame.draw.line(screen, CROSS_COLOR, start1, end1, CROSS_WIDTH)
+    pygame.draw.line(screen, CROSS_COLOR, start2, end2, CROSS_WIDTH)
 
 
 def get_available_moves(board):
     moves = []
-    for i in range(3):
-        for j in range(3):
+    for i in range(GRID_SIZE):
+        for j in range(GRID_SIZE):
             if board[i][j] == ' ':
                 moves.append((i, j))
     return moves
 
 
 def check_winner(board, player):
-    for i in range(3):
-        if all(board[i][j] == player for j in range(3)):
+    for i in range(GRID_SIZE):
+        if all(board[i][j] == player for j in range(GRID_SIZE)):
             return True
-        if all(board[j][i] == player for j in range(3)):
+        if all(board[j][i] == player for j in range(GRID_SIZE)):
             return True
-    if all(board[i][i] == player for i in range(3)) or all(board[i][2 - i] == player for i in range(3)):
+    if all(board[i][i] == player for i in range(GRID_SIZE)) or all(board[i][GRID_SIZE - 1 - i] == player for i in range(GRID_SIZE)):
         return True
     return False
 
 
 def is_board_full(board):
-    return all(board[i][j] != ' ' for i in range(3) for j in range(3))
+    return all(board[i][j] != ' ' for i in range(GRID_SIZE) for j in range(GRID_SIZE))
 
 
 def minimax(board, depth, maximizing_player):
@@ -75,52 +124,64 @@ def get_best_move(board):
     return best_move
 
 
-def on_click(row, col):
-    if board[row][col] == ' ':
-        board[row][col] = 'X'
-        buttons[row][col].config(text='X', state=tk.DISABLED)
-        if check_winner(board, 'X'):
-            messagebox.showinfo("Game Over", "Player wins!")
-            reset_board()
-            return
-        if is_board_full(board):
-            messagebox.showinfo("Game Over", "It's a draw!")
-            reset_board()
-            return
-
-        # AI TURN HERE
-        best_move = get_best_move(board)
-        if best_move:
-            ai_row, ai_col = best_move
-            board[ai_row][ai_col] = 'O'
-            buttons[ai_row][ai_col].config(text='O', state=tk.DISABLED)
-            if check_winner(board, 'O'):
-                messagebox.showinfo("Game Over", "AI wins!")
-                reset_board()
-                return
-            if is_board_full(board):
-                messagebox.showinfo("Game Over", "It's a draw!")
-                reset_board()
-                return
-
-
 def reset_board():
-    global board
-    board = [[' ' for _ in range(3)] for _ in range(3)]
-    for i in range(3):
-        for j in range(3):
-            buttons[i][j].config(text='', state=tk.NORMAL)
+    global board, game_over
+    board = [[' ' for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]
+    game_over = False
+    screen.fill(BG_COLOR)
+    pygame.draw.rect(screen, BLANK_COLOR, (GAME_WIDTH, 0, WIDTH, WIDTH))
+    draw_grid()
 
 
-# Main Game
-root = tk.Tk()
-root.title("Tic Tac Toe")
-buttons = [[None for _ in range(3)] for _ in range(3)]
-for i in range(3):
-    for j in range(3):
-        buttons[i][j] = tk.Button(root, text='', font=('Arial', 24), width=5, height=2,
-                                  command=lambda row=i, col=j: on_click(row, col))
-        buttons[i][j].grid(row=i, column=j)
+# Main game loop
+draw_grid()
+running = True
+player_turn = True
 
-board = [[' ' for _ in range(3)] for _ in range(3)]
-root.mainloop()
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+        if event.type == pygame.MOUSEBUTTONDOWN and not game_over and not event.pos[0] >= GAME_WIDTH:
+            mouse_x, mouse_y = event.pos
+            clicked_row = int(mouse_y // CELL_SIZE)
+            clicked_col = int(mouse_x // CELL_SIZE)
+
+            if board[clicked_row][clicked_col] == ' ' and player_turn:
+                board[clicked_row][clicked_col] = 'X'
+                if check_winner(board, 'X'):
+                    game_over = True
+                    text = font.render("Player wins!", True, (0, 0, 0))
+                    screen.blit(text, (GAME_WIDTH // 2 - 80, 0))
+                elif is_board_full(board):
+                    game_over = True
+                    text = font.render("It's a draw!", True, (0, 0, 0))
+                    screen.blit(text, (GAME_WIDTH // 2 - 80, 0))
+                else:
+                    player_turn = False
+
+        if not player_turn and not game_over:
+            best_move = get_best_move(board)
+            if best_move:
+                ai_row, ai_col = best_move
+                board[ai_row][ai_col] = 'O'
+                if check_winner(board, 'O'):
+                    game_over = True
+                    text = font.render("AI wins!", True, (0, 0, 0))
+                    screen.blit(text, (GAME_WIDTH // 2 - 80, 0))
+                elif is_board_full(board):
+                    game_over = True
+                    text = font.render("It's a draw!", True, (0, 0, 0))
+                    screen.blit(text, (GAME_WIDTH // 2 - 80, 0))
+                player_turn = True
+
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_r:
+                reset_board()
+                player_turn = True
+
+    pygame.display.update()
+    draw_marks()
+
+pygame.quit()

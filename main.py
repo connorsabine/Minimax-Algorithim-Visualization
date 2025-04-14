@@ -161,8 +161,42 @@ while running:
                 else:
                     player_turn = False
 
+
+        # AI TURN
         if not player_turn and not game_over:
             best_move = get_best_move(board)
+            pygame.draw.rect(screen, BLANK_COLOR, (GAME_WIDTH, 0, WIDTH - GAME_WIDTH, HEIGHT))  
+            pygame.display.update()
+            for idx, move in enumerate(get_available_moves(board)):
+                row, col = move
+                board[row][col] = 'O'
+
+                eval = minimax(board, 0, False)
+                board[row][col] = ' '
+
+                mini_board_x = GAME_WIDTH + 40 + (idx % 3) * 200  
+                mini_board_y = 10 + (idx // 3) * 200 
+                pygame.draw.rect(screen, LINE_COLOR, (mini_board_x - 5, mini_board_y - 5, 130, 130), 2)
+
+                for r in range(GRID_SIZE):
+                    for c in range(GRID_SIZE):
+                        cell_x = mini_board_x + c * 40
+                        cell_y = mini_board_y + r * 40
+                        if r == row and c == col:
+                            pygame.draw.rect(screen, (255, 255, 0), (cell_x, cell_y, 40, 40)) 
+                            if board[r][c] == ' ':
+                                pygame.draw.circle(screen, (0, 0, 255), (cell_x + 20, cell_y + 20), 15, 2) 
+                        if board[r][c] == 'X':
+                            pygame.draw.line(screen, CROSS_COLOR, (cell_x + 5, cell_y + 5), (cell_x + 35, cell_y + 35), 2)
+                            pygame.draw.line(screen, CROSS_COLOR, (cell_x + 35, cell_y + 5), (cell_x + 5, cell_y + 35), 2)
+                        elif board[r][c] == 'O':
+                            pygame.draw.circle(screen, CIRCLE_COLOR, (cell_x + 20, cell_y + 20), 15, 2)
+
+                small_font = pygame.font.Font(None, 40)
+                move_text = small_font.render(f"Score: {eval}", True, (0, 0, 0))
+                screen.blit(move_text, (mini_board_x, mini_board_y + 135))  
+                pygame.display.update()
+
             if best_move:
                 ai_row, ai_col = best_move
                 board[ai_row][ai_col] = 'O'

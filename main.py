@@ -15,10 +15,10 @@ OFFSET = 50
 
 
 # CONSTANT COLORS
-BG_COLOR = (28, 170, 156)
-LINE_COLOR = (23, 145, 135)
-CIRCLE_COLOR = (239, 231, 200)
-CROSS_COLOR = (84, 84, 84)
+BG_COLOR = (30, 170, 160)
+LINE_COLOR = (30, 145, 135)
+CIRCLE_COLOR = (230, 230, 200)
+CROSS_COLOR = (80, 80, 80)
 BLANK_COLOR = (200, 200, 200) 
 
 
@@ -44,15 +44,28 @@ def drawCircle(row, col):
 
 
 def drawCross(row, col):
-    start1 = (col * CELL_SIZE + OFFSET, row * CELL_SIZE + OFFSET)
-    end1 = (col * CELL_SIZE + CELL_SIZE - OFFSET, row * CELL_SIZE + CELL_SIZE - OFFSET)
-    start2 = (col * CELL_SIZE + OFFSET, row * CELL_SIZE + CELL_SIZE - OFFSET)
-    end2 = (col * CELL_SIZE + CELL_SIZE - OFFSET, row * CELL_SIZE + OFFSET)
-    pygame.draw.line(screen, CROSS_COLOR, start1, end1, CROSS_WIDTH)
-    pygame.draw.line(screen, CROSS_COLOR, start2, end2, CROSS_WIDTH)
+    a1 = (col * CELL_SIZE + OFFSET, row * CELL_SIZE + OFFSET)
+    a2 = (col * CELL_SIZE + CELL_SIZE - OFFSET, row * CELL_SIZE + CELL_SIZE - OFFSET)
+    b1 = (col * CELL_SIZE + OFFSET, row * CELL_SIZE + CELL_SIZE - OFFSET)
+    b2 = (col * CELL_SIZE + CELL_SIZE - OFFSET, row * CELL_SIZE + OFFSET)
+    pygame.draw.line(screen, CROSS_COLOR, a1, a2, CROSS_WIDTH)
+    pygame.draw.line(screen, CROSS_COLOR, b1, b2, CROSS_WIDTH)
 
 
 # GAME FUNCTIONS
+def resetGame():
+    # Initialize
+    global board, gameOver, running, playerTurn
+    board = [[' ' for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]
+    gameOver = False
+    running = True
+    playerTurn = True
+
+    # Draw
+    screen.fill(BG_COLOR)
+    pygame.draw.rect(screen, BLANK_COLOR, (GAME_WIDTH, 0, WIDTH, WIDTH))
+    drawGrid()
+
 def getAvailableMoves(board):
     moves = []
     for i in range(GRID_SIZE):
@@ -75,15 +88,6 @@ def checkWinner(board, player):
 
 def isBoardFull(board):
     return all(board[i][j] != ' ' for i in range(GRID_SIZE) for j in range(GRID_SIZE))
-
-
-def drawGrid():
-    global board, gameOver
-    board = [[' ' for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]
-    gameOver = False
-    screen.fill(BG_COLOR)
-    pygame.draw.rect(screen, BLANK_COLOR, (GAME_WIDTH, 0, WIDTH, WIDTH))
-    drawGrid()
 
 
 # MINIMAX FUNCTIONS
@@ -133,17 +137,8 @@ def getBestMove(board):
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Tic Tac Toe")
-screen.fill(BG_COLOR)
-
-pygame.draw.rect(screen, BLANK_COLOR, (GAME_WIDTH, 0, WIDTH, WIDTH))
 font = pygame.font.Font(None, 60)
-
-board = [[' ' for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]
-gameOver = False
-
-drawGrid()
-running = True
-playerTurn = True
+resetGame()
 
 while running:
     for event in pygame.event.get():
@@ -153,8 +148,7 @@ while running:
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_r:
-                drawGrid()
-                playerTurn = True
+                resetGame()
 
 
         if not gameOver:
